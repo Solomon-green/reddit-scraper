@@ -2,7 +2,8 @@ name: Collect Reddit jobs
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    # off the :00/:30 peak, when GitHub most often delays or drops scheduled runs
+    - cron: "7,37 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:

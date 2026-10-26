@@ -70,7 +70,12 @@ def main(dry_run):
             saved, rows = saved + len(rows), []
     store.insert(rows)
     saved += len(rows)
-    print(f"classified {saved} new, {jobs} in-niche jobs, {time.time() - started:.0f}s")
+    seconds = int(time.time() - started)
+    print(f"classified {saved} new, {jobs} in-niche jobs, {seconds}s")
+    store.log_run(
+        collected=len(posts), candidates=len(candidates), classified=saved,
+        jobs=jobs, failures="; ".join(failures)[:1000], seconds=seconds,
+    )
 
 
 REQUIRED_ENV = ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "ANTHROPIC_API_KEY")

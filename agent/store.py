@@ -38,6 +38,10 @@ def insert(rows):
         _request("POST", f"{TABLE}?on_conflict=id", rows, prefer="resolution=ignore-duplicates,return=minimal")
 
 
+def log_run(**fields):
+    _request("POST", "reddit_agent_runs", fields, prefer="return=minimal")
+
+
 def upsert(rows):
     """Overwrite the given columns of existing rows (status is left alone if not included)."""
     if rows:

@@ -129,9 +129,9 @@ export async function stats() {
     count(new URLSearchParams({ ...openRemote, status: "eq.new" })),
     count(new URLSearchParams({ status: "eq.saved" })),
     count(new URLSearchParams({ status: "eq.applied" })),
-    rest("reddit_jobs?select=found_at&order=found_at.desc&limit=1").then((r) => r.json()),
+    rest("reddit_agent_runs?select=finished_at&order=finished_at.desc&limit=1").then((r) => r.json()),
   ]);
-  return { today, fresh, saved, applied, lastRun: (lastRun[0]?.found_at as string | undefined) ?? null };
+  return { today, fresh, saved, applied, lastRun: (lastRun[0]?.finished_at as string | undefined) ?? null };
 }
 
 export async function updateStatus(id: string, status: Status) {
