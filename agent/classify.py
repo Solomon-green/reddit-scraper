@@ -20,7 +20,17 @@ category: which of the consultant's niches the work falls in; "other" if none
 (e.g. generic sales, appointment setting, customer support, sysadmin, web development).
 
 score: 0-100 fit for this consultant (100 = clearly paid, clearly in-niche, clear scope;
-under 20 for anything in "other").
+under 20 for anything in "other" and for hybrid or onsite work).
+work_mode: the consultant only takes FULLY REMOTE work.
+- "remote": explicitly remote / work from anywhere, OR an online freelance/contract gig with
+  no location requirement (most Reddit freelance tasks).
+- "hybrid": some office days required.
+- "onsite": a physical location is required (city/office named as where the work happens,
+  "in-office", "on-site", "local candidates", relocation).
+- "unknown": a staff role that names no location and gives no remote signal.
+remote_region: for remote work limited to certain countries/timezones, say so briefly
+(e.g. "US only", "EU timezones", "Philippines"); "" if open to anywhere or not stated.
+
 budget: the stated pay/budget verbatim, or "" if none.
 summary: one plain sentence describing what they need.
 reason: one short sentence (under 25 words) explaining the verdict."""
@@ -30,6 +40,8 @@ class Verdict(pydantic.BaseModel):
     is_job: bool
     category: Literal["ai_automation", "google_workspace", "gtm", "other"]
     score: int
+    work_mode: Literal["remote", "hybrid", "onsite", "unknown"]
+    remote_region: str
     budget: str
     summary: str
     reason: str

@@ -5,6 +5,14 @@ import "server-only";
 
 export type Category = "ai_automation" | "google_workspace" | "gtm" | "other";
 export type Status = "new" | "saved" | "applied" | "ignored";
+export type WorkMode = "remote" | "hybrid" | "onsite" | "unknown";
+
+export const WORK_MODE_LABEL: Record<WorkMode, string> = {
+  remote: "Remote",
+  hybrid: "Hybrid",
+  onsite: "On-site",
+  unknown: "Location unclear",
+};
 
 export type Job = {
   id: string;
@@ -16,6 +24,8 @@ export type Job = {
   found_at: string;
   category: Category;
   score: number;
+  work_mode: WorkMode;
+  remote_region: string;
   budget: string;
   summary: string;
   reason: string;
@@ -70,10 +80,11 @@ async function rest(path: string, init: RequestInit = {}) {
   return res;
 }
 
-export type Filters = { categories: Category[]; status: Status | "all"; minScore: number };
+export type Filters = { categories: Category[]; status: Status | "all"; minScore: number; remoteOnly: boolean };
 
-function filterQuery({ categories, status, minScore }: Filters) {
+function filterQuery({ categories, status, minScore, remoteOnly }: Filters) {
   const q = new URLSearchParams({ is_job: "eq.true", category: `in.(${categories.join(",")})` });
+  if (remoteOnly) q.set("work_mode", "eq.remote");
   if (status !== "all") q.set("status", `eq.${status}`);
   if (minScore > 0) q.set("score", `gte.${minScore}`);
   return q;
@@ -81,7 +92,7 @@ function filterQuery({ categories, status, minScore }: Filters) {
 
 export async function listJobs(filters: Filters): Promise<Job[]> {
   const q = filterQuery(filters);
-  q.set("select", "id,subreddit,title,url,author,posted_at,found_at,category,score,budget,summary,reason,status");
+  q.set("select", "id,subreddit,title,url,author,posted_at,found_at,category,score,work_mode,remote_region,budget,summary,reason,status");
   q.set("order", "posted_at.desc");
   q.set("limit", "150");
   return (await rest(`reddit_jobs?${q}`)).json();
@@ -97,8 +108,8 @@ export async function stats() {
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const niche = `in.(${NICHES.join(",")})`;
   const [today, fresh, saved, applied, lastRun] = await Promise.all([
-    count(new URLSearchParams({ is_job: "eq.true", category: niche, found_at: `gte.${since}` })),
-    count(new URLSearchParams({ is_job: "eq.true", category: niche, status: "eq.new" })),
+    count(new URLSearchParams({ is_job: "eq.true", category: niche, work_mode: "eq.remote", found_at: `gte.${since}` })),
+    count(new URLSearchParams({ is_job: "eq.true", category: niche, work_mode: "eq.remote", status: "eq.new" })),
     count(new URLSearchParams({ status: "eq.saved" })),
     count(new URLSearchParams({ status: "eq.applied" })),
     rest("reddit_jobs?select=found_at&order=found_at.desc&limit=1").then((r) => r.json()),

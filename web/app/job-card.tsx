@@ -1,5 +1,5 @@
 import { setStatus } from "./actions";
-import { CATEGORY_LABEL, type Job, type Status } from "@/lib/jobs";
+import { CATEGORY_LABEL, WORK_MODE_LABEL, type Job, type Status } from "@/lib/jobs";
 
 const ACTIONS: { status: Status; label: string }[] = [
   { status: "saved", label: "Save" },
@@ -35,6 +35,14 @@ export function JobCard({ job }: { job: Job }) {
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-indigo">
             <span className="rounded-full bg-indigo-soft px-2.5 py-0.5 font-medium text-navy">
               {CATEGORY_LABEL[job.category]}
+            </span>
+            <span
+              className={`rounded-full px-2.5 py-0.5 font-medium ${
+                job.work_mode === "remote" ? "bg-amber-soft text-navy" : "bg-mist/60 text-indigo"
+              }`}
+            >
+              {WORK_MODE_LABEL[job.work_mode]}
+              {job.remote_region && ` · ${job.remote_region}`}
             </span>
             <span>r/{job.subreddit}</span>
             <span aria-hidden>·</span>

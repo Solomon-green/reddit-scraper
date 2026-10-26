@@ -36,3 +36,19 @@ def existing_ids(ids):
 def insert(rows):
     if rows:
         _request("POST", f"{TABLE}?on_conflict=id", rows, prefer="resolution=ignore-duplicates,return=minimal")
+
+
+def upsert(rows):
+    """Overwrite the given columns of existing rows (status is left alone if not included)."""
+    if rows:
+        _request("POST", f"{TABLE}?on_conflict=id", rows, prefer="resolution=merge-duplicates,return=minimal")
+
+
+def all_rows(columns):
+    rows, offset = [], 0
+    while True:
+        page = _request("GET", f"{TABLE}?select={columns}&order=id&limit=500&offset={offset}")
+        rows += page
+        if len(page) < 500:
+            return rows
+        offset += 500

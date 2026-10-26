@@ -34,7 +34,7 @@ const STATUS_TABS: { key: Status | "all"; label: string }[] = [
 ];
 const MIN_SCORES = [0, 20, 40, 60];
 
-type Params = { cat?: string; status?: string; min?: string };
+type Params = { cat?: string; status?: string; min?: string; loc?: string };
 
 function href(current: Params, change: Params) {
   const q = new URLSearchParams({ ...current, ...change } as Record<string, string>);
@@ -72,14 +72,15 @@ function Loading() {
 
 async function Dashboard({ searchParams }: Pick<PageProps<"/">, "searchParams">) {
   const sp = (await searchParams) as Params;
-  const params: Params = { cat: sp.cat ?? "niche", status: sp.status ?? "new", min: sp.min ?? "0" };
+  const params: Params = { cat: sp.cat ?? "niche", status: sp.status ?? "new", min: sp.min ?? "0", loc: sp.loc ?? "remote" };
+  const remoteOnly = params.loc !== "any";
   const tab = CATEGORY_TABS.find((t) => t.key === params.cat) ?? CATEGORY_TABS[0];
   const status = (STATUS_TABS.find((t) => t.key === params.status) ?? STATUS_TABS[0]).key;
   const minScore = Number(params.min) || 0;
 
   let jobs: Job[], s: Awaited<ReturnType<typeof stats>>;
   try {
-    [jobs, s] = await Promise.all([listJobs({ categories: tab.categories, status, minScore }), stats()]);
+    [jobs, s] = await Promise.all([listJobs({ categories: tab.categories, status, minScore, remoteOnly }), stats()]);
   } catch (e) {
     // Only reachable after login, so it's fine to say what's wrong.
     return <SetupError message={(e as Error).message} />;
@@ -108,8 +109,8 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/">, "searchParams">)
 
           <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              ["New in my niches", s.fresh],
-              ["Found last 24h", s.today],
+              ["New remote in my niches", s.fresh],
+              ["Remote found last 24h", s.today],
               ["Saved", s.saved],
               ["Applied", s.applied],
             ].map(([label, value]) => (
@@ -151,6 +152,23 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/">, "searchParams">)
                 }`}
               >
                 {t.label}
+              </Link>
+            ))}
+          </nav>
+          <nav aria-label="Location" className="flex rounded-full bg-white p-1 text-sm">
+            {[
+              ["remote", "Fully remote"],
+              ["any", "Any location"],
+            ].map(([key, label]) => (
+              <Link
+                key={key}
+                href={href(params, { loc: key })}
+                aria-current={(key === "remote") === remoteOnly ? "page" : undefined}
+                className={`rounded-full px-3 py-1.5 transition ${
+                  (key === "remote") === remoteOnly ? "bg-navy font-medium text-white" : "text-indigo hover:text-navy"
+                }`}
+              >
+                {label}
               </Link>
             ))}
           </nav>
