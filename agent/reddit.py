@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from config import USER_AGENT
 
 ATOM = "{http://www.w3.org/2005/Atom}"
-MIN_GAP_SECONDS = 4
+MIN_GAP_SECONDS = 61  # Reddit's anonymous RSS budget is ~1 request per 60s window
 _last_request = 0.0
 
 
@@ -64,8 +64,8 @@ def _parse(xml_bytes, source):
         )
 
 
-def subreddit_new(sub):
-    return list(_parse(_get(f"https://www.reddit.com/r/{sub}/new/.rss?limit=100"), f"r/{sub}"))
+def subreddits_new(name, subs):
+    return list(_parse(_get(f"https://www.reddit.com/r/{'+'.join(subs)}/new/.rss?limit=100"), name))
 
 
 def search(query):

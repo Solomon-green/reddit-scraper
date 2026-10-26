@@ -14,15 +14,16 @@ import reddit
 
 def collect():
     posts, failures = {}, []
-    sources = [(reddit.subreddit_new, s) for s in config.JOB_BOARDS] + [(reddit.search, q) for q in config.SEARCHES]
-    for fn, arg in sources:
+    sources = [(name, lambda n=name, s=subs: reddit.subreddits_new(n, s)) for name, subs in config.FEEDS.items()]
+    sources += [(f"search: {q[:40]}", lambda q=q: reddit.search(q)) for q in config.SEARCHES]
+    for name, fetch in sources:
         t = time.time()
         try:
-            for p in fn(arg):
+            for p in fetch():
                 posts.setdefault(p.id, p)
         except Exception as e:  # one bad feed shouldn't stop the run
-            failures.append(f"{arg[:40]}: {e}")
-        print(f"  {time.time() - t:5.1f}s  {arg[:60]}")
+            failures.append(f"{name}: {e}")
+        print(f"  {time.time() - t:5.1f}s  {name}")
     return list(posts.values()), failures
 
 

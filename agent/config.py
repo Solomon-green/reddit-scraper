@@ -3,19 +3,24 @@ import re
 
 USER_AGENT = "solomon-os-reddit-jobs/0.1"
 
-# Job boards where clients post [Hiring]/[Task] — read their full "new" feed.
-# Verified 2026-10-26: each exists and carries real hiring posts.
+# Reddit allows ~1 anonymous RSS request per minute, so subreddits are combined
+# into multi-feeds (r/a+b+c) — one request each. Each returns the newest 100 posts.
+
+# Job boards where clients post [Hiring]/[Task]. Verified 2026-10-26.
 JOB_BOARDS = [
     "forhire", "hiring", "jobbit", "RemoteJobs", "slavelabour", "DoneDirtCheap",
     "Programmers_forhire", "ForHireFreelance", "freelances_forhire",
 ]
 
-# Reddit-wide searches (sorted by new) to catch hiring posts anywhere,
-# including tool communities like r/n8n where full feeds are mostly help requests.
+# Tool communities: mostly help requests, occasionally someone wanting to pay.
+COMMUNITIES = ["n8n", "n8n_ai_agents", "zapier", "automation", "GoogleAppsScript", "gtmengineering"]
+
+FEEDS = {"boards": JOB_BOARDS, "communities": COMMUNITIES}
+
+# One Reddit-wide search (sorted by new) to catch hiring posts in any subreddit.
 SEARCHES = [
-    'title:hiring (n8n OR zapier OR "make.com" OR automation OR "ai agent" OR "apps script" OR "google workspace" OR "google sheets")',
-    'title:hiring (GTM OR "go to market" OR clay OR outbound OR "lead gen")',
-    'subreddit:n8n OR subreddit:zapier OR subreddit:automation OR subreddit:GoogleAppsScript OR subreddit:n8n_ai_agents',
+    'title:hiring (n8n OR zapier OR "make.com" OR automation OR "ai agent" OR "apps script" OR "google workspace"'
+    ' OR "google sheets" OR GTM OR "go to market" OR clay OR outbound OR "lead gen")',
 ]
 
 # Someone wants to pay for work — required before a post reaches the AI.

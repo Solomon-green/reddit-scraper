@@ -1,9 +1,8 @@
 name: Collect Reddit jobs
 
 on:
-  # schedule paused until hosting is settled (Reddit rate limits)
-  # schedule:
-  #   - cron: "*/30 * * * *"
+  schedule:
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
