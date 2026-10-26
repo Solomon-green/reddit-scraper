@@ -1,8 +1,9 @@
 name: Collect Reddit jobs
 
 on:
-  schedule:
-    - cron: "*/30 * * * *"
+  # schedule paused until hosting is settled (Reddit rate limits)
+  # schedule:
+  #   - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -26,9 +27,15 @@ jobs:
           cache: pip
           cache-dependency-path: agent/requirements.txt
       - run: pip install -r agent/requirements.txt
+      - name: Reddit access check
+        run: |
+          for i in 1 2 3; do
+            curl -s -o /dev/null -D - -A "solomon-os-reddit-jobs/0.1" https://www.reddit.com/r/forhire/new/.rss \
+              | grep -iE "^(HTTP|x-ratelimit)" ; sleep 3
+          done
       - name: Run agent
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python agent/run.py ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: python -u agent/run.py ${{ inputs.dry_run && '--dry-run' || '' }}
