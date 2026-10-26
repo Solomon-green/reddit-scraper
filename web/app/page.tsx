@@ -109,8 +109,8 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/">, "searchParams">)
 
           <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              ["New remote in my niches", s.fresh],
-              ["Remote found last 24h", s.today],
+              ["New · remote worldwide", s.fresh],
+              ["Found last 24h", s.today],
               ["Saved", s.saved],
               ["Applied", s.applied],
             ].map(([label, value]) => (
@@ -157,7 +157,7 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/">, "searchParams">)
           </nav>
           <nav aria-label="Location" className="flex rounded-full bg-white p-1 text-sm">
             {[
-              ["remote", "Fully remote"],
+              ["remote", "Remote · worldwide"],
               ["any", "Any location"],
             ].map(([key, label]) => (
               <Link

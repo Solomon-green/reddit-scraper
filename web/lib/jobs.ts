@@ -82,9 +82,20 @@ async function rest(path: string, init: RequestInit = {}) {
 
 export type Filters = { categories: Category[]; status: Status | "all"; minScore: number; remoteOnly: boolean };
 
+// Bot boards reposting corporate job-site ads; the agent no longer collects them (agent/config.py).
+const MUTED_SUBREDDITS = "not.in.(jobboardsearch,HiddenJobsDev,RemoteJobIntel,RedditJobBoard)";
+
 function filterQuery({ categories, status, minScore, remoteOnly }: Filters) {
-  const q = new URLSearchParams({ is_job: "eq.true", category: `in.(${categories.join(",")})` });
-  if (remoteOnly) q.set("work_mode", "eq.remote");
+  const q = new URLSearchParams({
+    is_job: "eq.true",
+    category: `in.(${categories.join(",")})`,
+    subreddit: MUTED_SUBREDDITS,
+  });
+  // Fully remote AND open worldwide (no country/region/timezone limit)
+  if (remoteOnly) {
+    q.set("work_mode", "eq.remote");
+    q.set("remote_region", "eq.");
+  }
   if (status !== "all") q.set("status", `eq.${status}`);
   if (minScore > 0) q.set("score", `gte.${minScore}`);
   return q;
@@ -106,10 +117,16 @@ async function count(q: URLSearchParams) {
 
 export async function stats() {
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  const niche = `in.(${NICHES.join(",")})`;
+  const openRemote = {
+    is_job: "eq.true",
+    category: `in.(${NICHES.join(",")})`,
+    work_mode: "eq.remote",
+    remote_region: "eq.",
+    subreddit: MUTED_SUBREDDITS,
+  };
   const [today, fresh, saved, applied, lastRun] = await Promise.all([
-    count(new URLSearchParams({ is_job: "eq.true", category: niche, work_mode: "eq.remote", found_at: `gte.${since}` })),
-    count(new URLSearchParams({ is_job: "eq.true", category: niche, work_mode: "eq.remote", status: "eq.new" })),
+    count(new URLSearchParams({ ...openRemote, found_at: `gte.${since}` })),
+    count(new URLSearchParams({ ...openRemote, status: "eq.new" })),
     count(new URLSearchParams({ status: "eq.saved" })),
     count(new URLSearchParams({ status: "eq.applied" })),
     rest("reddit_jobs?select=found_at&order=found_at.desc&limit=1").then((r) => r.json()),

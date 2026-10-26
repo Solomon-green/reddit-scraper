@@ -31,6 +31,9 @@ HIRING = re.compile(
     re.I,
 )
 
+# Bot boards that repost corporate job-site ads (one account posts everything) — never clients.
+MUTED_SUBREDDITS = {"jobboardsearch", "hiddenjobsdev", "remotejobintel", "redditjobboard"}
+
 # Freelancers advertising themselves — always dropped before the AI step.
 FOR_HIRE = re.compile(
     r"\[\s*(for\s*hire|offer|offering|available)\s*\]|\bfor hire\b|\boffering my\b|\bmy services\b"

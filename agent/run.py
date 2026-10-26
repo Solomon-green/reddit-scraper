@@ -30,7 +30,8 @@ def collect():
 def prefilter(posts):
     return [
         p for p in posts
-        if not config.FOR_HIRE.search(p.title)
+        if p.subreddit.lower() not in config.MUTED_SUBREDDITS
+        and not config.FOR_HIRE.search(p.title)
         and config.HIRING.search(f"{p.title} {p.body}")
         and config.TOPIC.search(f"{p.title} {p.body}")
     ]
