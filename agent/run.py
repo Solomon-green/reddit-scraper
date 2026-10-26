@@ -69,8 +69,20 @@ def main(dry_run):
 
 REQUIRED_ENV = ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "ANTHROPIC_API_KEY")
 
+
+def load_dotenv(path=os.path.join(os.path.dirname(__file__), "..", ".env")):
+    """Local runs read keys from .env; on GitHub Actions they come from repo secrets."""
+    if not os.path.exists(path):
+        return
+    for line in open(path, encoding="utf-8"):
+        key, sep, value = line.strip().partition("=")
+        if sep and not key.startswith("#") and value:
+            os.environ.setdefault(key.strip(), value.strip())
+
+
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
+    load_dotenv()
     missing = [k for k in REQUIRED_ENV if not os.environ.get(k)]
     if missing and "--dry-run" not in sys.argv:
         print(f"missing {', '.join(missing)} - running as dry run")
