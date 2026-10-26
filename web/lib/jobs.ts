@@ -32,16 +32,40 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   other: "Other",
 };
 
+// Problems an admin can fix in Vercel settings; safe to show (never includes the key itself).
+export class ConfigError extends Error {}
+
+function supabaseUrl() {
+  const raw = process.env.SUPABASE_URL?.trim().replace(/^["']|["']$/g, "");
+  if (!raw) throw new ConfigError("SUPABASE_URL is not set in Vercel environment variables.");
+  if (!/^https:\/\/[a-z0-9]+\.supabase\.co/.test(raw))
+    throw new ConfigError(`SUPABASE_URL should look like https://<project>.supabase.co — got "${raw.slice(0, 60)}".`);
+  return raw.replace(/\/(rest\/v1)?\/?$/, "");
+}
+
+function secretKey() {
+  const key = process.env.SUPABASE_SECRET_KEY?.trim().replace(/^["']|["']$/g, "");
+  if (!key) throw new ConfigError("SUPABASE_SECRET_KEY is not set in Vercel environment variables.");
+  if (key.startsWith("sb_publishable_"))
+    throw new ConfigError("SUPABASE_SECRET_KEY is the publishable key — use the secret key (sb_secret_...).");
+  return key;
+}
+
 async function rest(path: string, init: RequestInit = {}) {
-  const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/${path}`, {
-    ...init,
-    headers: {
-      apikey: process.env.SUPABASE_SECRET_KEY ?? "",
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
-    cache: "no-store",
-  });
+  const url = `${supabaseUrl()}/rest/v1/${path}`;
+  const key = secretKey();
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      headers: { apikey: key, "Content-Type": "application/json", ...init.headers },
+      cache: "no-store",
+    });
+  } catch (e) {
+    throw new ConfigError(`Could not reach Supabase at ${supabaseUrl()} (${(e as Error).message}). Is the project paused?`);
+  }
+  if (res.status === 401 || res.status === 403)
+    throw new ConfigError(`Supabase rejected SUPABASE_SECRET_KEY (HTTP ${res.status}). Re-copy the secret key from Supabase.`);
   if (!res.ok) throw new Error(`Supabase ${res.status}: ${await res.text()}`);
   return res;
 }

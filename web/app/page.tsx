@@ -2,7 +2,21 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { logout } from "./actions";
 import { JobCard } from "./job-card";
-import { CATEGORY_LABEL, NICHES, listJobs, stats, type Category, type Status } from "@/lib/jobs";
+import { CATEGORY_LABEL, NICHES, listJobs, stats, type Category, type Job, type Status } from "@/lib/jobs";
+
+function SetupError({ message }: { message: string }) {
+  return (
+    <main className="flex flex-1 items-center justify-center bg-navy px-4">
+      <div className="w-full max-w-lg rounded-3xl bg-white p-8">
+        <h1 className="text-lg font-semibold">Can&apos;t load jobs</h1>
+        <p className="mt-2 rounded-xl bg-amber-soft px-4 py-3 text-sm leading-relaxed [overflow-wrap:anywhere]">{message}</p>
+        <p className="mt-4 text-sm text-indigo">
+          Fix it in Vercel → Settings → Environment Variables, then redeploy the latest deployment.
+        </p>
+      </div>
+    </main>
+  );
+}
 
 const CATEGORY_TABS: { key: string; label: string; categories: Category[] }[] = [
   { key: "niche", label: "My niches", categories: NICHES },
@@ -63,7 +77,13 @@ async function Dashboard({ searchParams }: Pick<PageProps<"/">, "searchParams">)
   const status = (STATUS_TABS.find((t) => t.key === params.status) ?? STATUS_TABS[0]).key;
   const minScore = Number(params.min) || 0;
 
-  const [jobs, s] = await Promise.all([listJobs({ categories: tab.categories, status, minScore }), stats()]);
+  let jobs: Job[], s: Awaited<ReturnType<typeof stats>>;
+  try {
+    [jobs, s] = await Promise.all([listJobs({ categories: tab.categories, status, minScore }), stats()]);
+  } catch (e) {
+    // Only reachable after login, so it's fine to say what's wrong.
+    return <SetupError message={(e as Error).message} />;
+  }
 
   return (
     <>
