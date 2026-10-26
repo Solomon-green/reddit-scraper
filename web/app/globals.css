@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+/* GrowMyMail brand palette (from growmymail.com site colour variables) */
+@theme inline {
+  --color-navy: #1c2d5a;
+  --color-navy-deep: #15224a;
+  --color-amber: #ffc145;
+  --color-amber-soft: #fff3d6;
+  --color-indigo: #424d80;
+  --color-indigo-soft: #e6e8f2;
+  --color-mist: #d9dbe6;
+  --color-canvas: #f4f5f9;
+  --font-sans: var(--font-poppins);
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-navy);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-amber);
+  outline-offset: 2px;
+}
