@@ -53,7 +53,7 @@ def main(dry_run):
     import store
 
     new = [p for p in candidates if p.id not in store.existing_ids(p.id for p in candidates)]
-    rows = []
+    rows, saved, jobs = [], 0, 0
     for p in new:
         try:
             v = classify.classify(p)
@@ -61,11 +61,15 @@ def main(dry_run):
             print(f"  ! classify {p.id}: {e}")
             continue
         rows.append({**vars(p), **v.model_dump()})
-        if v.is_job:
+        if v.is_job and v.category != "other":
+            jobs += 1
             print(f"  + [{v.score}] {v.category}: {p.title[:90]}")
+        if len(rows) == 20:  # save as we go so a timeout doesn't lose the run
+            store.insert(rows)
+            saved, rows = saved + len(rows), []
     store.insert(rows)
-    jobs = sum(r["is_job"] for r in rows)
-    print(f"classified {len(rows)} new, {jobs} jobs saved, {time.time() - started:.0f}s")
+    saved += len(rows)
+    print(f"classified {saved} new, {jobs} in-niche jobs, {time.time() - started:.0f}s")
 
 
 REQUIRED_ENV = ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "ANTHROPIC_API_KEY")

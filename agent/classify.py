@@ -22,7 +22,8 @@ category: which of the consultant's niches the work falls in; "other" if none
 score: 0-100 fit for this consultant (100 = clearly paid, clearly in-niche, clear scope;
 under 20 for anything in "other").
 budget: the stated pay/budget verbatim, or "" if none.
-summary: one plain sentence describing what they need."""
+summary: one plain sentence describing what they need.
+reason: one short sentence (under 25 words) explaining the verdict."""
 
 
 class Verdict(pydantic.BaseModel):
@@ -42,9 +43,11 @@ def classify(post):
     _client = _client or anthropic.Anthropic()
     msg = _client.messages.parse(
         model=MODEL,
-        max_tokens=400,
+        max_tokens=1024,
         system=SYSTEM,
         messages=[{"role": "user", "content": f"Subreddit: r/{post.subreddit}\nTitle: {post.title}\n\n{post.body}"}],
         output_format=Verdict,
     )
+    if msg.parsed_output is None:
+        raise ValueError(f"no verdict (stop_reason={msg.stop_reason})")
     return msg.parsed_output
